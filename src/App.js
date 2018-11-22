@@ -58,6 +58,7 @@ class App extends Component {
     let columnTwo = [];
     let columnThree = [];
     let leftDiagonal = [];
+    let rightDiagonal = [];
     for (let i = 0; i < newSquares.length; i++) {
       if (i % 3 === 0) {
         columnOne.push(newSquares[i]);
@@ -71,12 +72,16 @@ class App extends Component {
       if (i % 4 === 0) {
         leftDiagonal.push(newSquares[i]);
       }
+      if (i % 2 === 0 && i > 0 && i < newSquares.length - 1) {
+        rightDiagonal.push(newSquares[i]);
+      }
     }
     return {
       one: columnOne,
       two: columnTwo,
       three: columnThree,
-      four: leftDiagonal
+      four: leftDiagonal,
+      five: rightDiagonal
     };
   }
   inArray(value, array) {
@@ -91,38 +96,40 @@ class App extends Component {
     const xWins = ["X", "X", "X"];
     const oWins = ["O", "O", "O"];
     const newSquares = [...this.state.squares];
-
-    let winner =
-      JSON.stringify(newSquares.slice(0, 3)) === JSON.stringify(xWins) ||
-      JSON.stringify(newSquares.slice(3, 6)) === JSON.stringify(xWins) ||
-      JSON.stringify(newSquares.slice(6, 9)) === JSON.stringify(xWins) ||
-      JSON.stringify(this.compareColumns().one) === JSON.stringify(xWins) ||
-      JSON.stringify(this.compareColumns().two) === JSON.stringify(xWins) ||
-      JSON.stringify(this.compareColumns().three) === JSON.stringify(xWins) ||
-      JSON.stringify(this.compareColumns().four) === JSON.stringify(xWins)
+    const compareX = JSON.stringify(xWins);
+    const compareO = JSON.stringify(oWins);
+    let resultOfTheGame =
+      JSON.stringify(newSquares.slice(0, 3)) === compareX ||
+      JSON.stringify(newSquares.slice(3, 6)) === compareX ||
+      JSON.stringify(newSquares.slice(6, 9)) === compareX ||
+      JSON.stringify(this.compareColumns().one) === compareX ||
+      JSON.stringify(this.compareColumns().two) === compareX ||
+      JSON.stringify(this.compareColumns().three) === compareX ||
+      JSON.stringify(this.compareColumns().four) === compareX ||
+      JSON.stringify(this.compareColumns().five) === compareX
         ? "Player X wins!"
-        : JSON.stringify(newSquares.slice(0, 3)) === JSON.stringify(oWins) ||
-          JSON.stringify(newSquares.slice(3, 6)) === JSON.stringify(oWins) ||
-          JSON.stringify(newSquares.slice(6, 9)) === JSON.stringify(oWins) ||
-          JSON.stringify(this.compareColumns().one) === JSON.stringify(oWins) ||
-          JSON.stringify(this.compareColumns().two) === JSON.stringify(oWins) ||
-          JSON.stringify(this.compareColumns().three) ===
-            JSON.stringify(oWins) ||
-          JSON.stringify(this.compareColumns().four) === JSON.stringify(oWins)
+        : JSON.stringify(newSquares.slice(0, 3)) === compareO ||
+          JSON.stringify(newSquares.slice(3, 6)) === compareO ||
+          JSON.stringify(newSquares.slice(6, 9)) === compareO ||
+          JSON.stringify(this.compareColumns().one) === compareO ||
+          JSON.stringify(this.compareColumns().two) === compareO ||
+          JSON.stringify(this.compareColumns().three) === compareO ||
+          JSON.stringify(this.compareColumns().four) === compareO ||
+          JSON.stringify(this.compareColumns().five) === compareO
         ? " Player O wins!"
         : this.inArray(null, newSquares)
         ? "Draw"
         : null;
 
-    return winner;
+    return resultOfTheGame;
   }
   restartGame = () => {
     let newSquares = Array(9).fill(null);
     this.setState({
       squares: newSquares,
       gameEnded: false,
-      turn: 0,
-      history: {}
+      turn: 1,
+      history: { 0: Array(9).fill(null) }
     });
   };
   pointerStyleSquare = a => {
