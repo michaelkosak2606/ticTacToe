@@ -7,8 +7,8 @@ class App extends Component {
     squares: Array(9).fill(null),
     playerXTurn: true,
     gameEnded: false,
-    history: { 0: Array(9).fill(null) },
-    turn: 1
+    turn: 1,
+    history: { 0: Array(9).fill(null) }
   };
   // updateHistory() {
   //   let turn = this.state.turn;
@@ -127,6 +127,7 @@ class App extends Component {
     let newSquares = Array(9).fill(null);
     this.setState({
       squares: newSquares,
+      playerXTurn: true,
       gameEnded: false,
       turn: 1,
       history: { 0: Array(9).fill(null) }
@@ -148,18 +149,24 @@ class App extends Component {
 
     //reducing the copy this.state.history to the elements
     // with keys from the array above, in this case {0:[...], 1:[...],2:[...]}
+    //putting them into an object {}
     let backInTimeHistory = keysOfHistory.reduce((obj, key) => {
       obj[key] = history[key];
       return obj;
     }, {});
-    //this.state.squares has to get the value of the last
+    //this.state.squares has to get the value of the last element from
+    // the array backInTimeHistory
     let ok = goToTurnNumber - 1;
+    //check the number of turn we going back to, and assign right player to this turn
+
+    let playersTurn = goToTurnNumber % 2 === 1 ? true : false;
 
     this.setState({
       squares: backInTimeHistory[ok],
-      history: backInTimeHistory,
+      playerXTurn: playersTurn,
+      gameEnded: false,
       turn: goToTurnNumber,
-      gameEnded: false
+      history: backInTimeHistory
     });
     // console.log(this.state);
   };
