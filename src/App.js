@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { CSSTransitionGroup } from "react-transition-group";
 import "./components/Board.css";
 import Board from "./components/Board";
 
@@ -8,7 +9,8 @@ class App extends Component {
     playerXTurn: true,
     gameEnded: false,
     turn: 1,
-    history: { 0: Array(9).fill(null) }
+    history: { 0: Array(9).fill(null) },
+    zen: null
   };
   // updateHistory() {
   //   let turn = this.state.turn;
@@ -124,6 +126,7 @@ class App extends Component {
     return resultOfTheGame;
   }
   restartGame = () => {
+    this.loadZen();
     let newSquares = Array(9).fill(null);
     this.setState({
       squares: newSquares,
@@ -139,7 +142,8 @@ class App extends Component {
     // if(newSquares[a] !== null ) {return "noPointer"}
   };
   timeTravel = goToTurnNumber => {
-    console.log(goToTurnNumber);
+    //console.log(goToTurnNumber);
+    this.loadZen();
 
     let history = { ...this.state.history };
 
@@ -170,18 +174,33 @@ class App extends Component {
     });
     // console.log(this.state);
   };
+  loadZen = () => {
+    fetch("https://api.github.com/zen")
+      .then(data => data.text())
+      .then(zen => this.setState({ zen }));
+  };
 
   componentDidUpdate() {
     //loggt zwei identische states, wegen der callback Funktion
     // in setState in der handleClick Methode
+
     console.log(this.state);
+    console.log(this.state.zen);
+  }
+  componentDidMount() {
+    this.loadZen();
   }
 
   render() {
     //Statusanzeige: wer dran ist:
     let status = "Player  " + (this.state.playerXTurn ? "X" : "O") + "'s turn";
     //Anzeige der Restart-Buttons:
-    let buttonRestart = null;
+    let buttonRestart = (
+      <div className="zenContainer">
+        <p className="zenQuoteAnnouncement">Random Zen quote:</p>
+        <div className="zenQuoteWindow"> {this.state.zen}</div>
+      </div>
+    );
     if (this.checkWhoWins() !== null) {
       buttonRestart = (
         <button className="restartButton" onClick={this.restartGame}>
@@ -211,11 +230,13 @@ class App extends Component {
       <div className="game">
         <main className="leftSide">
           <div> {status} </div>
+
           <Board
             data={this.state}
             nextClick={this.handleClick}
             pointerStyle={this.pointerStyleSquare}
           />
+
           {buttonRestart}
         </main>
         <main className="rightSide">
