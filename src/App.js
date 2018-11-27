@@ -185,10 +185,13 @@ class App extends Component {
     // in setState in der handleClick Methode
 
     console.log(this.state);
-    console.log(this.state.zen);
+    // console.log(this.state.zen);
   }
-  componentDidMount() {
-    this.loadZen();
+  async componentDidMount() {
+    const data = await fetch("https://api.github.com/zen");
+    const text = await data.text();
+    this.setState({ zen: text });
+    console.log(text);
   }
 
   render() {
