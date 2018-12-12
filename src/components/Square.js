@@ -1,5 +1,5 @@
 import React from "react";
-import "./Board.css";
+import "./Styles.css";
 
 const square = props => {
   return (

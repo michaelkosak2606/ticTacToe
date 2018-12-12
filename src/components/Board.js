@@ -1,9 +1,8 @@
 import React, { Component } from "react";
 import Square from "./Square";
-import "./Board.css";
+import "./Styles.css";
 
 export default class Board extends Component {
-  //Funktionen
 
   render() {
     return (

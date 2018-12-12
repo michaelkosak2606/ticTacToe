@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import { CSSTransitionGroup } from "react-transition-group";
-import "./components/Board.css";
+import "./components/Styles.css";
 import Board from "./components/Board";
+import RestartButton from "./components/RestartButton";
 
 class App extends Component {
   state = {
@@ -10,26 +10,14 @@ class App extends Component {
     gameEnded: false,
     turn: 1,
     history: { 0: Array(9).fill(null) },
-    zen: null
+    zen: "",
+    error: null
   };
-  // updateHistory() {
-  //   let turn = this.state.turn;
-  //   let newSquares = [...this.state.squares];
-  //   let history = { ...this.state.history };
-  //   let updatedHistory = { ...history, [turn]: newSquares };
-  //   return updatedHistory;
-  // }
-  handleClick = a => {
-    //verstehen wieso es so funktioniert und wieso das andere evtl.
-    // nicht funktioniert hat, wenn updateHistory in eigener Funktion ist
-    // wird nur das array [null,...,null] in die history geaddet, also immer 1 Turn "zu spät"
-    // s.d zwei gleiche arrays sich da drin befinden
 
-    // instead of the function updateHistory:
+  handleClick = a => {
     let turn = this.state.turn;
     let history = { ...this.state.history };
     let newSquares = [...this.state.squares];
-    let updatedHistory = { ...history, [turn]: newSquares };
 
     if (newSquares[a] === null && this.state.gameEnded === false) {
       this.state.playerXTurn === true
@@ -40,15 +28,21 @@ class App extends Component {
           playerXTurn: !this.state.playerXTurn,
           turn: this.state.turn + 1,
           squares: newSquares,
-          history: updatedHistory
         },
         () => {
-          this.setState({});
-          if (this.checkWhoWins() !== null) {
-            this.setState({
-              gameEnded: !this.state.gameEnded
+          let updatedSquares = [...this.state.squares];
+          let updatedHistory = { ...history, [turn]: updatedSquares };
+          this.setState({
+            history: updatedHistory
+          },
+            () => {
+              if (this.checkWhoWins() !== null) {
+                this.setState({
+                  gameEnded: !this.state.gameEnded
+                });
+              }
             });
-          }
+
         }
       );
     }
@@ -102,13 +96,13 @@ class App extends Component {
     const compareO = JSON.stringify(oWins);
     let resultOfTheGame =
       JSON.stringify(newSquares.slice(0, 3)) === compareX ||
-      JSON.stringify(newSquares.slice(3, 6)) === compareX ||
-      JSON.stringify(newSquares.slice(6, 9)) === compareX ||
-      JSON.stringify(this.compareColumns().one) === compareX ||
-      JSON.stringify(this.compareColumns().two) === compareX ||
-      JSON.stringify(this.compareColumns().three) === compareX ||
-      JSON.stringify(this.compareColumns().four) === compareX ||
-      JSON.stringify(this.compareColumns().five) === compareX
+        JSON.stringify(newSquares.slice(3, 6)) === compareX ||
+        JSON.stringify(newSquares.slice(6, 9)) === compareX ||
+        JSON.stringify(this.compareColumns().one) === compareX ||
+        JSON.stringify(this.compareColumns().two) === compareX ||
+        JSON.stringify(this.compareColumns().three) === compareX ||
+        JSON.stringify(this.compareColumns().four) === compareX ||
+        JSON.stringify(this.compareColumns().five) === compareX
         ? "Player X wins!"
         : JSON.stringify(newSquares.slice(0, 3)) === compareO ||
           JSON.stringify(newSquares.slice(3, 6)) === compareO ||
@@ -118,10 +112,10 @@ class App extends Component {
           JSON.stringify(this.compareColumns().three) === compareO ||
           JSON.stringify(this.compareColumns().four) === compareO ||
           JSON.stringify(this.compareColumns().five) === compareO
-        ? " Player O wins!"
-        : this.inArray(null, newSquares)
-        ? "Draw"
-        : null;
+          ? " Player O wins!"
+          : this.inArray(null, newSquares)
+            ? "Draw"
+            : null;
 
     return resultOfTheGame;
   }
@@ -142,27 +136,16 @@ class App extends Component {
     // if(newSquares[a] !== null ) {return "noPointer"}
   };
   timeTravel = goToTurnNumber => {
-    //console.log(goToTurnNumber);
     this.loadZen();
 
     let history = { ...this.state.history };
-
-    //if goToTurnNumber is 3, then we get an array of first 3 keys, which is [0,1,2]
-    // because the history in turn 3 has exactly 3 elements and so on
     let keysOfHistory = Object.keys(history).slice(0, goToTurnNumber);
 
-    //reducing the copy this.state.history to the elements
-    // with keys from the array above, in this case {0:[...], 1:[...],2:[...]}
-    //putting them into an object {}
     let backInTimeHistory = keysOfHistory.reduce((obj, key) => {
       obj[key] = history[key];
       return obj;
     }, {});
-    //this.state.squares has to get the value of the last element from
-    // the array backInTimeHistory
     let ok = goToTurnNumber - 1;
-    //check the number of turn we going back to, and assign right player to this turn
-
     let playersTurn = goToTurnNumber % 2 === 1 ? true : false;
 
     this.setState({
@@ -172,51 +155,39 @@ class App extends Component {
       turn: goToTurnNumber,
       history: backInTimeHistory
     });
-    // console.log(this.state);
   };
   loadZen = () => {
     fetch("https://api.github.com/zen")
       .then(data => data.text())
-      .then(zen => this.setState({ zen }));
+      .then(zen => this.setState({ zen }))
   };
 
-  componentDidUpdate() {
-    //loggt zwei identische states, wegen der callback Funktion
-    // in setState in der handleClick Methode
-
-    console.log(this.state);
-    // console.log(this.state.zen);
-  }
   async componentDidMount() {
-    const data = await fetch("https://api.github.com/zen");
-    const text = await data.text();
-    this.setState({ zen: text });
-    console.log(text);
+    try {
+      const response = await fetch("https://api.github.com/zen");
+
+      if (!response.ok) {
+        throw Error(response.statusText);
+      }
+      const text = await response.text();
+      await this.setState({ zen: text, error: null });
+    } catch (error) {
+      console.log("Something went wrong");
+    }
   }
 
   render() {
     //Statusanzeige: wer dran ist:
     let status = "Player  " + (this.state.playerXTurn ? "X" : "O") + "'s turn";
-    //Anzeige der Restart-Buttons:
-    let buttonRestart = (
-      <div className="zenContainer">
-        <p className="zenQuoteAnnouncement">Random Zen quote:</p>
-        <div className="zenQuoteWindow"> {this.state.zen}</div>
-      </div>
-    );
-    if (this.checkWhoWins() !== null) {
-      buttonRestart = (
-        <button className="restartButton" onClick={this.restartGame}>
-          {this.checkWhoWins()}
-          <span>Restart the game</span>
-        </button>
-      );
-    }
+    //Zen API CHECK
+    let zenQuoteStatus =
+      this.state.zen.length < 100 ? this.state.zen : <p>Error occured...</p>;
+
     //gameHistoryButtons
     let history = { ...this.state.history };
     let keysOfHistory = Object.keys(history);
     keysOfHistory.shift();
-    var gameHistoryButtons = keysOfHistory.map((turnNumber, index) => {
+    const gameHistoryButtons = keysOfHistory.map((turnNumber, index) => {
       let goToTurnNumber = Number(turnNumber);
       return (
         <button
@@ -240,7 +211,12 @@ class App extends Component {
             pointerStyle={this.pointerStyleSquare}
           />
 
-          {buttonRestart}
+          <RestartButton
+            data={this.checkWhoWins()}
+            restartGame={this.restartGame}
+            checkWhoWins={this.checkWhoWins()}
+            zenQuote={zenQuoteStatus}
+          />
         </main>
         <main className="rightSide">
           Turns
